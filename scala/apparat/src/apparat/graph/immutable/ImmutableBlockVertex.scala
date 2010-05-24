@@ -1,7 +1,3 @@
-package apparat.graph.immutable
-
-import apparat.graph.BlockVertex
-import apparat.bytecode.operations.AbstractOp
 /*
  * This file is part of Apparat.
  * 
@@ -25,17 +21,23 @@ import apparat.bytecode.operations.AbstractOp
  * Date: 31 janv. 2010
  * Time: 19:59:02
  */
+package apparat.graph.immutable
+
+import apparat.graph.BlockVertex
+import apparat.bytecode.operations.AbstractOp
 
 class ImmutableBlockVertex[T](val block: List[T] = Nil) extends BlockVertex[T] with Immutable {
-	def add(elms: List[T]) = new ImmutableBlockVertex(block ::: elms)
+	override def ++(elms: List[T]) = new ImmutableBlockVertex(block ::: elms)
 
-	def removeFirst = new ImmutableBlockVertex(block drop 1)
+	override def removeFirst = new ImmutableBlockVertex(block.tail)
 
-	def removeLast = new ImmutableBlockVertex(block dropRight 1)
+	override def removeLast = new ImmutableBlockVertex(block dropRight 1)
 
-	def clear = new ImmutableBlockVertex()
+	override def clear = new ImmutableBlockVertex()
 }
 
 class ImmutableAbstractOpBlockVertex(block: List[AbstractOp] = Nil) extends ImmutableBlockVertex[AbstractOp](block) {
+	override def ++(elms: List[AbstractOp]) = new ImmutableAbstractOpBlockVertex(block ::: elms)
+
 	override def toString = block.mkString("[[", "\\n", "]]")
 }

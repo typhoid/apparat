@@ -23,22 +23,22 @@ package apparat.graph.mutable
 import apparat.graph.BlockVertex
 
 class MutableBlockVertex[T](var block: List[T] = Nil) extends BlockVertex[T] {
-	def add(elms: List[T]) = {
+	override def ++(elms: List[T]) = {
 		block = block ++ elms
 		this
 	}
 
-	def removeFirst() = {
-		block = block drop 1
+	override def removeFirst() = {
+		block = block.tail
 		this
 	}
 
-	def removeLast()= {
-		block = block take block.length - 1
+	override def removeLast() = {
+		block = block dropRight 1
 		this
 	}
 
-	def clear() = {
+	override def clear() = {
 		block = Nil
 		this
 	}

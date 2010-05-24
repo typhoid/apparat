@@ -1,39 +1,38 @@
 /*
  * This file is part of Apparat.
- *
+ * 
  * Apparat is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * 
  * Apparat is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU Lesser General Public License
  * along with Apparat. If not, see <http://www.gnu.org/licenses/>.
- *
+ * 
  * Copyright (C) 2009 Joa Ebert
  * http://www.joa-ebert.com/
- *
+ * 
  * User: Patrick Le Clec'h
- * Date: 31 janv. 2010
- * Time: 19:52:30
+ * Date: 9 janv. 2010
+ * Time: 21:03:59
  */
+package apparat.graph.mutable
 
-package apparat.graph.immutable
-
-import apparat.bytecode.{Marker, Bytecode}
 import apparat.bytecode.operations._
-import apparat.graph._
 import annotation.tailrec
+import apparat.bytecode.{Marker, Bytecode}
+import apparat.graph._
 
-object BytecodeControlFlowGraphBuilder extends (Bytecode => BytecodeControlFlowGraph[ImmutableAbstractOpBlockVertex]) {
+object MutableBytecodeControlFlowGraphBuilder extends (Bytecode => MutableBytecodeControlFlowGraph) {
 	def apply(bytecode: Bytecode) = {
 		import collection.mutable.{Queue}
 
-		type V = ImmutableAbstractOpBlockVertex
+		type V = MutableAbstractOpBlockVertex
 
 		val ops = bytecode.ops
 		val markers = bytecode.markers
@@ -41,11 +40,10 @@ object BytecodeControlFlowGraphBuilder extends (Bytecode => BytecodeControlFlowG
 
 		val blockQueue = new Queue[(V, AbstractOp)]()
 
+		val graph = new MutableBytecodeControlFlowGraph()
+
 		// use to find a target marker
 		var vertexMap: Map[V, List[AbstractOp]] = Map.empty
-
-		// use to build the graph
-		var edgeMap: Map[V, List[Edge[V]]] = Map.empty
 
 		AbstractOpBasicBlockSlicer(bytecode).foreach {
 			opList => {
@@ -61,7 +59,7 @@ object BytecodeControlFlowGraphBuilder extends (Bytecode => BytecodeControlFlowG
 
 				//remove jum from block
 				newOpList.lastOption match {
-					case Some(op)  => if (op.isInstanceOf[Jump]) newOpList = newOpList dropRight 1
+					case Some(op) => if (op.isInstanceOf[Jump]) newOpList = newOpList dropRight 1
 					case _ =>
 				}
 
@@ -69,25 +67,23 @@ object BytecodeControlFlowGraphBuilder extends (Bytecode => BytecodeControlFlowG
 
 				vertexMap = vertexMap updated (vertex, opList)
 
-				edgeMap = edgeMap updated (vertex, Nil)
+				graph += vertex
 
 				blockQueue += ((vertex, lastOp))
 			}
 		}
 
-		val entryVertex = new V() {override def toString = "[Entry]"}
-		edgeMap = edgeMap updated (entryVertex, Nil)
+		val entryVertex = graph.entryVertex
 
-		val exitVertex = new V() {override def toString = "[Exit]"}
-		edgeMap = edgeMap updated (exitVertex, Nil)
+		val exitVertex = graph.exitVertex
 
 		// connect the first block to the entry
-		edgeMap = edgeMap updated (entryVertex, JumpEdge(entryVertex, blockQueue.head._1) :: edgeMap(entryVertex))
+		graph += JumpEdge(entryVertex, blockQueue.head._1)
 
 		def createVertexFromMarker[E <: Edge[V]](startBlock: V, marker: Marker, edgeFactory: (V, V) => E) {
 			marker.op map {
 				op => vertexMap.view.find(_._2 contains op) match {
-					case Some((vertexBlock, ops)) => edgeMap = edgeMap updated (startBlock, edgeFactory(startBlock, vertexBlock) :: edgeMap(startBlock))
+					case Some((vertexBlock, ops)) => graph += edgeFactory(startBlock, vertexBlock)
 					case _ => error("op not found into graph : " + marker.op.toString + "=>" + vertexMap)
 				}
 			}
@@ -102,7 +98,7 @@ object BytecodeControlFlowGraphBuilder extends (Bytecode => BytecodeControlFlowG
 					case condOp: AbstractConditionalOp => {
 						// the next block into the queue is a false edge
 						if (blockQueue.nonEmpty)
-							edgeMap = edgeMap updated (currentBlock, FalseEdge(currentBlock, blockQueue.head._1) :: edgeMap(currentBlock))
+							graph += FalseEdge(currentBlock, blockQueue.head._1)
 
 						// the marker is a TrueEdge
 						createVertexFromMarker(currentBlock, condOp.marker, TrueEdge[V] _)
@@ -110,7 +106,7 @@ object BytecodeControlFlowGraphBuilder extends (Bytecode => BytecodeControlFlowG
 
 					case jumpOp: Jump => createVertexFromMarker(currentBlock, jumpOp.marker, JumpEdge[V] _)
 
-					case throwOp: Throw => edgeMap = edgeMap updated (currentBlock, ThrowEdge(currentBlock, exitVertex) :: edgeMap(currentBlock))
+					case throwOp: Throw => graph += ThrowEdge(currentBlock, exitVertex)
 
 					case lookupOp: LookupSwitch => {
 						createVertexFromMarker(currentBlock, lookupOp.defaultCase, DefaultCaseEdge[V] _)
@@ -122,13 +118,13 @@ object BytecodeControlFlowGraphBuilder extends (Bytecode => BytecodeControlFlowG
 						})
 					}
 					case returnOp: OpThatReturns => {
-						edgeMap = edgeMap updated (currentBlock, ReturnEdge(currentBlock, exitVertex) :: edgeMap(currentBlock))
+						graph += ReturnEdge(currentBlock, exitVertex)
 					}
 					case _ => {
 						// by default the next block is a jump edge
 						// if it s not the last block of the queue
 						if (blockQueue.nonEmpty)
-							edgeMap = edgeMap updated (currentBlock, JumpEdge(currentBlock, blockQueue.head._1) :: edgeMap(currentBlock))
+							graph += JumpEdge(currentBlock, blockQueue.head._1)
 					}
 				}
 				// check if it exists a try catch for this block
@@ -146,6 +142,6 @@ object BytecodeControlFlowGraphBuilder extends (Bytecode => BytecodeControlFlowG
 		}
 		buildEdge()
 
-		new BytecodeControlFlowGraph(new Graph(edgeMap), entryVertex, exitVertex).optimized
+		graph.optimized
 	}
-}
+} 
