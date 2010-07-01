@@ -1,0 +1,16 @@
+/*.properties$
+/*.iws$
+/*.class$
+/target$
+/bin$
+/jar$
+/zip$
+/out$
+/classes$
+deprecated/java/Apparat.Core/assets/
+apparat-core/assets/
+apparat-core/src/main/scala/Main.scala
+glob:.settings/*
+glob:.classpath
+glob:.project
+glob:pom.xml.releaseBackup
