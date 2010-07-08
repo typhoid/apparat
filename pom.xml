@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.sonatype.oss</groupId>
+    <artifactId>oss-parent</artifactId>
+    <version>2</version>
+  </parent>
+    
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>${project.build.sourceEncoding}</project.reporting.outputEncoding>
+    <scala.version>2.8.0.RC7</scala.version>
+    <flex.version>3.2.0.3958</flex.version>
+    <maven.version>3.0-beta-1</maven.version>
+    <flexmojos.version>3.6.1</flexmojos.version>
+    <flexmojos.testrunner>TestRunner.swf</flexmojos.testrunner>
+  </properties>
+  
+  <groupId>com.googlecode.apparat</groupId>
+  <artifactId>apparat-aggregator</artifactId>
+  <version>1.0-SNAPSHOT</version>
+  <packaging>pom</packaging>
+
+  <name>apparat-aggregator</name>
+  <description>A framework to optimize ABC, SWC and SWF files.</description>
+  <url>http://code.google.com/p/apparat/</url>
+  
+  <issueManagement>
+    <system>google</system>
+    <url>http://code.google.com/p/apparat/issues/list</url>
+  </issueManagement>
+  
+  <distributionManagement>
+    <snapshotRepository>
+      <id>sonatype-nexus-snapshots</id>
+      <name>Sonatype Nexus Snapshots</name>
+      <url>http://oss.sonatype.org/content/repositories/snapshots</url>
+    </snapshotRepository>
+    <repository> 
+      <id>sonatype-nexus-staging</id> 
+      <name>Nexus Release Repository</name> 
+      <url>http://oss.sonatype.org/service/local/staging/deploy/maven2/</url> 
+    </repository> 
+  </distributionManagement>
+	
+  <developers>
+    <developer>
+	  <name>Joa Ebert</name>
+	  <email>joaebert@googlemail.com</email>
+	  <roles>
+	    <role>owner</role>
+	  </roles>
+	  <organization>Des Pudels Kern GmbH</organization>
+	  <organizationUrl>http://www.despudelskern.de/</organizationUrl>
+	</developer>
+	<developer>
+	  <name>Patrick Le Clec'h</name>
+	  <roles>
+	    <role>comitter</role>
+	  </roles>
+	</developer>
+	<developer>
+	  <name>Maxim Zaks</name>
+	  <roles>
+	    <role>comitter</role>
+	  </roles>
+	</developer>
+  </developers>
+  
+  <contributors>
+    <contributor>
+	  <name>Marvin Froeder</name>
+	  <email>velo.br@gmail.com</email>
+	  <organization>Sonatype Inc.</organization>
+	  <organizationUrl>http://www.sonatype.com/</organizationUrl>
+	</contributor>
+  </contributors>
+  
+  <mailingLists>
+    <mailingList>
+      <name>Apparat Framework Discussion Group</name>
+      <archive>http://groups.google.com/group/apparat-framework</archive>
+      <post>apparat-framework@googlegroups.com</post>
+      <subscribe>apparat-framework+subscribe@googlegroups.com</subscribe>
+      <unsubscribe>apparat-framework+unsubscribe@googlegroups.com</unsubscribe>
+    </mailingList>
+  </mailingLists>
+  
+  <scm>
+    <connection>scm:hg:http://apparat.googlecode.com/hg/</connection>
+    <developerConnection>scm:hg:https://apparat.googlecode.com/hg/</developerConnection>
+    <url>http://code.google.com/p/apparat/source/browse/</url>
+  </scm>
+
+  <licenses>
+    <license>
+      <name>LGPL</name>
+      <url>http://www.gnu.org/licenses/lgpl.html</url>
+    </license>
+  </licenses>
+
+  <build>
+    <pluginManagement>
+	  <plugins>
+	    <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-assembly-plugin</artifactId>
+          <version>2.2-beta-5</version>
+		  <configuration>
+            <descriptors>
+              <descriptor>src/main/assembly/bin.xml</descriptor>
+            </descriptors>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <configuration>
+            <source>1.6</source>
+            <target>1.6</target>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.scala-tools</groupId>
+          <artifactId>maven-scala-plugin</artifactId>
+          <version>2.12</version>
+          <executions>
+            <execution>
+              <id>compile</id>
+              <goals>
+                <goal>compile</goal>
+              </goals>
+            </execution>
+            <execution>
+              <id>testCompile</id>
+              <goals>
+                <goal>testCompile</goal>
+              </goals>
+            </execution>
+            <execution>
+              <id>doc</id>
+              <goals>
+                <goal>doc</goal>
+              </goals>
+            </execution>
+          </executions>
+          <configuration>
+            <scalaVersion>${scala.version}</scalaVersion>
+            <jvmArgs>
+              <arg>-Xmx512M</arg>
+              <arg>-Xss2M</arg>
+            </jvmArgs> 
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+    <plugins>
+      <plugin>
+        <groupId>org.sonatype.flexmojos</groupId>
+        <artifactId>flexmojos-maven-plugin</artifactId>
+        <extensions>true</extensions>
+        <version>${flexmojos.version}</version>
+      </plugin>
+    </plugins>
+  </build>
+
+  <modules>
+    <module>apparat-anttasks</module>
+    <module>apparat-archetypes</module>
+	<module>apparat-core</module>
+    <module>apparat-ersatz</module>
+    <module>apparat-jitb</module>
+    <module>apparat-maven-plugin</module>
+    <module>apparat-playerglobal</module>
+    <module>apparat-taas</module>
+  </modules>
+
+  <repositories>
+    <repository>
+      <id>scala-snapshots</id>
+      <url>http://scala-tools.org/repo-snapshots/</url>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>flex-sdk</id>
+      <url>http://repository.sonatype.org/content/groups/flexgroup/</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
+
+  <pluginRepositories>
+    <pluginRepository>
+      <id>scala-snapshots</id>
+      <url>http://scala-tools.org/repo-snapshots/</url>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </pluginRepository>
+    <pluginRepository>
+      <id>flex-sdk</id>
+      <url>http://repository.sonatype.org/content/groups/flexgroup/</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </pluginRepository>
+  </pluginRepositories>
+  <profiles>
+    <profile>
+      <id>release-sign-artifacts</id>
+      <activation>
+        <property>
+          <name>performRelease</name>
+          <value>true</value>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <version>1.0-alpha-4</version>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+</project>
