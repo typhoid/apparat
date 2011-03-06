@@ -112,6 +112,7 @@ final class Swf extends Dumpable with SwfTagMapping {
 	def read(input: SwfInputStream, inputLength: Long): Unit = {
 		(input.readUI08(), input.readUI08(), input.readUI08()) match {
 			case (x, 'W', 'S') => compressed = x match {
+				case 'Z' => true
 				case 'C' => true
 				case 'F' => false
 				case _ => error("Not a SWF file.")
