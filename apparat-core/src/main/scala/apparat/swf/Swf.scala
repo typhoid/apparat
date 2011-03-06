@@ -188,10 +188,8 @@ final class Swf extends Dumpable with SwfTagMapping {
 
 	def write(output: SwfOutputStream) {
 		compression match {
-			case Some(SwfZLibCompression) =>
-				if(version < 6) error("SWF version 6 is required for Zlib compression.")
-			case Some(SwfLZMACompression) =>
-				if(version < 13) error("SWF version 13 is required for LZMA compression.")
+			case Some(SwfZLibCompression) if version < 6 => version = 6
+			case Some(SwfLZMACompression) if version < 13 => version = 13
 			case None => 
 		}
 
@@ -228,7 +226,7 @@ final class Swf extends Dumpable with SwfTagMapping {
 					lzmaBuffer.flush()
 					val lzmaCompressed = lzmaBuffer.toByteArray
 					output.writeUI32(lzmaCompressed.length - 5)//compressed length sans props (5b)
-					output.write(lzmaBuffer)
+					output.write(lzmaCompressed)
 				case None => output write bytes
 			}
 
