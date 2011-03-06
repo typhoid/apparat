@@ -60,7 +60,7 @@ object Swfs {
 			(backgroundColor & 0xff00) >> 8,
 			 backgroundColor & 0xff)
 
-		result.compressed = true
+		result.compression = Some(SwfZLibCompression)
 		result.version = 10
 		result.frameSize = new Rect(0, width * 20, 0, height * 20)
 		result.frameRate = frameRate

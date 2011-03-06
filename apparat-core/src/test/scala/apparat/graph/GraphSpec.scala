@@ -6,13 +6,8 @@ import apparat.utils.IndentingPrintWriter
 import java.io.StringWriter
 
 /**
- * Created by IntelliJ IDEA.
- * User: mzaks
- * Date: 26.04.2010
- * Time: 07:20:10
- * To change this template use File | Settings | File Templates.
+ * @author Maxim Zaks
  */
-
 class GraphSpec extends SpecificationWithJUnit {
   "Immutable Graph creation" should {
 
