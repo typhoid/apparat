@@ -187,6 +187,14 @@ final class Swf extends Dumpable with SwfTagMapping {
 	}
 
 	def write(output: SwfOutputStream) {
+		compression match {
+			case Some(SwfZLibCompression) =>
+				if(version < 6) error("SWF version 6 is required for Zlib compression.")
+			case Some(SwfLZMACompression) =>
+				if(version < 13) error("SWF version 13 is required for LZMA compression.")
+			case None => 
+		}
+
 		val byteArrayOutputStream = new JByteArrayOutputStream(0x08 + (tags.length << 0x03))
 		val buffer = new SwfOutputStream(byteArrayOutputStream)
 
@@ -214,7 +222,8 @@ final class Swf extends Dumpable with SwfTagMapping {
 
 			compression match {
 				case Some(SwfZLibCompression) => Deflate.compress(bytes, output)
-				case Some(SwfLZMACompression) => error("TODO encode lzma")
+				case Some(SwfLZMACompression) =>
+					error("TODO encode lzma")
 				case None => output write bytes
 			}
 
