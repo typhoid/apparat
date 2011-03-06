@@ -92,24 +92,24 @@ final class Swf extends Dumpable with SwfTagMapping {
 	def width = frameSize._2 / 20
 	def height = frameSize._4 / 20
 
-	def foreach(body: SwfTag => Unit) = tags foreach body
+	def foreach(body: SwfTag => Unit) { tags foreach body }
 
-	def read(file: JFile): Unit = using(new JBufferedInputStream(new JFileInputStream(file), 0x1000))(read(_, file.length))
+	def read(file: JFile) { using(new JBufferedInputStream(new JFileInputStream(file), 0x1000))(read(_, file.length)) }
 
-	def read(pathname: String): Unit = read(new JFile(pathname))
+	def read(pathname: String) { read(new JFile(pathname)) }
 
-	def read(input: JInputStream, inputLength: Long): Unit = using(new SwfInputStream(input))(read(_, inputLength))
+	def read(input: JInputStream, inputLength: Long) { using(new SwfInputStream(input))(read(_, inputLength)) }
 
-	def read(data: Array[Byte]): Unit = using(new JByteArrayInputStream(data))(read(_, data.length))
+	def read(data: Array[Byte]) { using(new JByteArrayInputStream(data))(read(_, data.length)) }
 
-	def read(swc: Swc): Unit = {
+	def read(swc: Swc) {
 		swc.library match {
 			case Some(data) => read(data)
 			case None =>
 		}
 	}
 
-	def read(input: SwfInputStream, inputLength: Long): Unit = {
+	def read(input: SwfInputStream, inputLength: Long) {
 		(input.readUI08(), input.readUI08(), input.readUI08()) match {
 			case (x, 'W', 'S') =>
 				compression = x match {
@@ -165,13 +165,13 @@ final class Swf extends Dumpable with SwfTagMapping {
 		loop(input.readTAG(), List.empty).reverse
 	}
 
-	def write(file: JFile): Unit = using(new JFileOutputStream(file))(write _)
+	def write(file: JFile) { using(new JFileOutputStream(file))(write _) }
 
-	def write(pathname: String): Unit = write(new JFile(pathname))
+	def write(pathname: String) { write(new JFile(pathname)) }
 
-	def write(output: JOutputStream): Unit = using(new SwfOutputStream(output))(write _)
+	def write(output: JOutputStream) { using(new SwfOutputStream(output))(write _) }
 
-	def write(swc: Swc): Unit = {
+	def write(swc: Swc) {
 		val byteArrayOutputStream = new JByteArrayOutputStream()
 
 		try {
@@ -186,7 +186,7 @@ final class Swf extends Dumpable with SwfTagMapping {
 		}
 	}
 
-	def write(output: SwfOutputStream): Unit = {
+	def write(output: SwfOutputStream) {
 		val byteArrayOutputStream = new JByteArrayOutputStream(0x08 + (tags.length << 0x03))
 		val buffer = new SwfOutputStream(byteArrayOutputStream)
 
@@ -277,7 +277,7 @@ final class Swf extends Dumpable with SwfTagMapping {
 		}
 	}
 
-	override def dump(writer: IndentingPrintWriter) = {
+	override def dump(writer: IndentingPrintWriter) {
 		writer <= "Swf:"
 		writer withIndent {
 			writer <= "Compression: "+compression.toString
