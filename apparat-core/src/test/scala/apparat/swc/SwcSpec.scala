@@ -3,13 +3,8 @@ package apparat.swc
 import org.specs.SpecificationWithJUnit
 
 /**
- * Created by IntelliJ IDEA.
- * User: mzaks
- * Date: 26.04.2010
- * Time: 09:11:12
- * To change this template use File | Settings | File Templates.
+ * @author Maxim Zaks
  */
-
 class SwcSpec extends SpecificationWithJUnit {
   val swc = Swc.fromFile("target/test-classes/ApparatTest.swc")
 

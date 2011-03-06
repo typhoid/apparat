@@ -52,7 +52,7 @@ object Swf {
 				input => {
 					val b0 = input.read()
 
-					if(('F' == b0 || 'C' == b0) && 'W' == input.read() && 'S' == input.read()) {
+					if(('F' == b0 || 'C' == b0 || 'Z' == b0) && 'W' == input.read() && 'S' == input.read()) {
 						val swf = new Swf
 						swf read file
 						swf
@@ -82,7 +82,7 @@ object Swf {
 }
 
 final class Swf extends Dumpable with SwfTagMapping {
-	var compressed: Boolean = true
+	var compression: Option[SwfCompressionType] = Some(SwfZLibCompression)
 	var version: Int = 10
 	var frameSize: Rect = new Rect(0, 20000, 0, 20000)
 	var frameRate: Float = 255.0f
@@ -111,24 +111,27 @@ final class Swf extends Dumpable with SwfTagMapping {
 
 	def read(input: SwfInputStream, inputLength: Long): Unit = {
 		(input.readUI08(), input.readUI08(), input.readUI08()) match {
-			case (x, 'W', 'S') => compressed = x match {
-				case 'Z' => true
-				case 'C' => true
-				case 'F' => false
-				case _ => error("Not a SWF file.")
-			}
+			case (x, 'W', 'S') =>
+				compression = x match {
+					case 'C' => Some(SwfZLibCompression)
+					case 'Z' => Some(SwfLZMACompression)
+					case 'F' => None
+					case _ => error("Not a SWF file.")
+				}
 			case _ => error("Not a SWF file.")
 		}
 
 		version = input.readUI08()
 
 		val uncompressedLength = input.readUI32()
-		val uncompressed = compressed match {
-			case true => {
+		val uncompressed = compression match {
+			case Some(SwfZLibCompression) =>
 				assert(version > 5)
 				uncompress(inputLength, uncompressedLength)(input)
-			}
-			case false => input
+			case Some(SwfLZMACompression) =>
+				assert(version > 12)
+				error("TODO: lzma decode")
+			case None => input
 		}
 
 		try {
@@ -143,7 +146,7 @@ final class Swf extends Dumpable with SwfTagMapping {
 
 			tags = tagsOf(uncompressed)
 		} finally {
-			if(compressed) {
+			if(compression.isDefined) {
 				try {
 					uncompressed.close()
 				} catch {
@@ -200,14 +203,19 @@ final class Swf extends Dumpable with SwfTagMapping {
 
 			buffer.close()
 
-			output.write(Array[Byte](if (compressed) 'C' else 'F', 'W', 'S'))
+			output.write(Array[Byte](
+				compression match {
+					case Some(SwfZLibCompression) => 'C'
+					case Some(SwfLZMACompression) => 'Z'
+					case None => 'F'
+				}, 'W', 'S'))
 			output.writeUI08(version)
 			output.writeUI32(8 + bytes.length)
 
-			if (compressed) {
-				Deflate.compress(bytes, output)
-			} else {
-				output write bytes
+			compression match {
+				case Some(SwfZLibCompression) => Deflate.compress(bytes, output)
+				case Some(SwfLZMACompression) => error("TODO encode lzma")
+				case None => output write bytes
 			}
 
 			output.flush()
@@ -250,10 +258,10 @@ final class Swf extends Dumpable with SwfTagMapping {
 	}
 
 	def toLZMAByteArray = {
-		val oldCompression = compressed
+		val oldCompression = compression
 
 		try {
-			compressed = false
+			compression = None
 
 			val swfByteArrayOutputStream = new JByteArrayOutputStream()
 			val lzmaByteArrayOutputStream = new JByteArrayOutputStream()
@@ -265,14 +273,14 @@ final class Swf extends Dumpable with SwfTagMapping {
 			LZMA.encode(new JByteArrayInputStream(byteArray), byteArray.length, lzmaByteArrayOutputStream)
 			lzmaByteArrayOutputStream.toByteArray
 		} finally {
-			compressed = oldCompression
+			compression = oldCompression
 		}
 	}
 
 	override def dump(writer: IndentingPrintWriter) = {
 		writer <= "Swf:"
 		writer withIndent {
-			writer <= "Compressed: "+compressed
+			writer <= "Compression: "+compression.toString
 			writer <= "Version: "+version
 			writer <= "Framesize:"+frameSize
 			writer <= "Framerate:"+frameRate

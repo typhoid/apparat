@@ -33,11 +33,11 @@ sealed trait SwfCompressionType
  *
  * @author Joa Ebert
  */
-case object SwfZLibCompression
+case object SwfZLibCompression extends SwfCompressionType
 
 /**
  * Indicates LZMA compression.
  *
  * @author Joa Ebert
  */
-case object SwfLZMACompression
+case object SwfLZMACompression extends SwfCompressionType

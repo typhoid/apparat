@@ -43,7 +43,7 @@ class TagContainer extends SwfTagMapping {
 				input => {
 					val b0 = input.read()
 
-					if(('F' == b0 || 'C' == b0) && 'W' == input.read() && 'S' == input.read()) {
+					if(('F' == b0 || 'C' == b0 || 'Z' == b0) && 'W' == input.read() && 'S' == input.read()) {
 						Some(new SwfStrategy)
 					} else if ('P' == b0 && 'K' == input.read()) {
 						Some(new SwcStrategy)

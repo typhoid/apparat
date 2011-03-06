@@ -5,13 +5,8 @@ import java.util.Date
 
 
 /**
- * Created by IntelliJ IDEA.
- * User: mzaks
- * Date: 28.04.2010
- * Time: 22:05:05
- * To change this template use File | Settings | File Templates.
+ * @author Maxim Zaks
  */
-
 class SwfSpec extends SpecificationWithJUnit {
   "SWF file" should {
 
@@ -32,7 +27,7 @@ class SwfSpec extends SpecificationWithJUnit {
     }
 
     "be compressed" >> {
-      swf.compressed must_== true
+      swf.compression must_== Some(SwfZLibCompression)
     }
 
     "have framecount" >> {
@@ -155,10 +150,10 @@ class SwfSpec extends SpecificationWithJUnit {
         def symbols = tag.symbols
         symbols must_!= null
 
-        "size of simbols is one" >> {
+        "size of symbols is one" >> {
           symbols.size must_== 1
 
-          "first simbol is myFunction" >> {
+          "first symbol is myFunction" >> {
             symbols(0)._2 must_== "myFunction"
           }
         }
