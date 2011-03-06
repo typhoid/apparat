@@ -223,7 +223,12 @@ final class Swf extends Dumpable with SwfTagMapping {
 			compression match {
 				case Some(SwfZLibCompression) => Deflate.compress(bytes, output)
 				case Some(SwfLZMACompression) =>
-					error("TODO encode lzma")
+					val lzmaBuffer = new JByteArrayOutputStream()
+					LZMA.encode(new JByteArrayInputStream(bytes), bytes.length, lzmaBuffer)
+					lzmaBuffer.flush()
+					val lzmaCompressed = lzmaBuffer.toByteArray
+					output.writeUI32(lzmaCompressed.length - 5)//compressed length sans props (5b)
+					output.write(lzmaBuffer)
 				case None => output write bytes
 			}
 
