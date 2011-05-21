@@ -36,6 +36,7 @@ import java.util.zip.{Inflater => JInflater}
 import scala.annotation.tailrec
 import apparat.utils.{Dumpable, Deflate, IndentingPrintWriter}
 import apparat.lzma.LZMA
+import apparat.sevenzip.compression.lzma.{Encoder => JEncoder, Decoder => JDecoder}
 
 object Swf {
 	def fromFile(file: JFile): Swf = {
@@ -130,7 +131,7 @@ final class Swf extends Dumpable with SwfTagMapping {
 				uncompress(inputLength, uncompressedLength)(input)
 			case Some(SwfLZMACompression) =>
 				assert(version > 12)
-				error("TODO: lzma decode")
+				lzmaDecode(inputLength, uncompressedLength)(input)
 			case None => input
 		}
 
@@ -190,7 +191,7 @@ final class Swf extends Dumpable with SwfTagMapping {
 		compression match {
 			case Some(SwfZLibCompression) if version < 6 => version = 6
 			case Some(SwfLZMACompression) if version < 13 => version = 13
-			case None => 
+			case _ =>
 		}
 
 		val byteArrayOutputStream = new JByteArrayOutputStream(0x08 + (tags.length << 0x03))
@@ -222,10 +223,21 @@ final class Swf extends Dumpable with SwfTagMapping {
 				case Some(SwfZLibCompression) => Deflate.compress(bytes, output)
 				case Some(SwfLZMACompression) =>
 					val lzmaBuffer = new JByteArrayOutputStream()
-					LZMA.encode(new JByteArrayInputStream(bytes), bytes.length, lzmaBuffer)
+					val encoder = new JEncoder()
+
+					encoder.setAlgorithm(2)
+					encoder.setDictionarySize(1 << 24)
+					encoder.setNumFastBytes(128)
+					encoder.setMatchFinder(1)
+					encoder.setLcLpPb(3, 0, 2)
+					encoder.setEndMarkerMode(true)
+					encoder.code(new JByteArrayInputStream(bytes), lzmaBuffer, -1, -1, null)
 					lzmaBuffer.flush()
+
 					val lzmaCompressed = lzmaBuffer.toByteArray
-					output.writeUI32(lzmaCompressed.length - 5)//compressed length sans props (5b)
+
+					output.writeUI32(lzmaCompressed.length)
+					encoder.writeCoderProperties(output)
 					output.write(lzmaCompressed)
 				case None => output write bytes
 			}
@@ -261,6 +273,15 @@ final class Swf extends Dumpable with SwfTagMapping {
 		}
 
 		new SwfInputStream(new JByteArrayInputStream(bufferOut))
+	}
+
+	def lzmaDecode(inputLength: Long, uncompressedLength: Long)(implicit input: JInputStream) = {
+		val compressedLength = input.readUI32()
+		val decoder = new JDecoder()
+		val properties = new Array[Byte](5)
+		input.read(properties)
+		decoder.SetDecoderProperties(properties)
+		decoder.Code(input, output, /*TODO*/)
 	}
 
 	def toByteArray = {
